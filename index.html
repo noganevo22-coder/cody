@@ -3,36 +3,134 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מערכת הצפנה - שמירה על שורות</title>
+    <title>מתרגם מבנה מודרני</title>
     <style>
-        :root { --primary: #4a90e2; --secondary: #f5f7fa; --text: #333; }
-        body { font-family: 'Segoe UI', sans-serif; background-color: var(--secondary); display: flex; justify-content: center; padding: 20px; }
-        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 800px; width: 100%; }
-        h1 { text-align: center; color: var(--primary); }
-        textarea { width: 100%; height: 150px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
-        .actions { display: flex; gap: 10px; margin-bottom: 20px; }
-        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-encrypt { background-color: var(--primary); }
-        .btn-copy { background-color: #2ecc71; }
-        .btn-download { background-color: #f39c12; }
+        :root {
+            --primary: #4a90e2;
+            --primary-hover: #357abd;
+            --success: #2ecc71;
+            --success-hover: #27ae60;
+            --warning: #f39c12;
+            --warning-hover: #d68910;
+            --bg: #f0f2f5;
+            --text-main: #2c3e50;
+            --shadow: 0 10px 25px rgba(0,0,0,0.08);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            margin-top: 0;
+            font-weight: 800;
+            color: var(--primary);
+            letter-spacing: -1px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        textarea {
+            width: 100%;
+            height: 160px;
+            padding: 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            margin-bottom: 25px;
+            transition: all 0.3s ease;
+            resize: vertical;
+            outline: none;
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+            color: white;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        button:active {
+            transform: scale(0.96);
+        }
+
+        .btn-en { background-color: var(--primary); }
+        .btn-en:hover { background-color: var(--primary-hover); box-shadow: 0 6px 12px rgba(74, 144, 226, 0.2); }
+
+        .btn-copy { background-color: var(--success); }
+        .btn-copy:hover { background-color: var(--success-hover); box-shadow: 0 6px 12px rgba(46, 204, 113, 0.2); }
+
+        .btn-download { background-color: var(--warning); }
+        .btn-download:hover { background-color: var(--warning-hover); box-shadow: 0 6px 12px rgba(243, 156, 18, 0.2); }
+
+        #outputText {
+            background-color: #fafbfc;
+            border-style: dashed;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>הצפנה שומרת מבנה</h1>
+    <h1>תרגום שומר מבנה</h1>
     
-    <label>טקסט מקור:</label>
-    <textarea id="inputText" placeholder="הקלד כאן..."></textarea>
+    <label for="inputText">טקסט מקור</label>
+    <textarea id="inputText" placeholder="הדבק או הקלד טקסט כאן..."></textarea>
 
     <div class="actions">
-        <button class="btn-encrypt" onclick="processEncryption()">הצפן</button>
-        <button class="btn-copy" onclick="copyToClipboard()">העתק</button>
-        <button class="btn-download" onclick="downloadTxt()">הורד TXT</button>
+        <button class="btn-en" onclick="processEn()">⚡ תרגם עכשיו</button>
+        <button class="btn-copy" onclick="copyToClipboard()">📋 העתק פלט</button>
+        <button class="btn-download" onclick="downloadTxt()">💾 הורד קובץ</button>
     </div>
 
-    <label>פלט מוצפן (עם ירידות שורה מקוריות):</label>
-    <textarea id="outputText" readonly></textarea>
+    <label for="outputText">תוצאת התרגום</label>
+    <textarea id="outputText" readonly placeholder="התוצאה תופיע כאן..."></textarea>
 </div>
 
 <script>
@@ -42,8 +140,8 @@
         'ר':'Y','ש':'Z','ת':'_'
     };
 
-    const encryptionMap = {
-        'a':'אא', 'b':'אב', 'c':'אג', 'd':'אד', 'e':'אה', 'f':'או', 'g':'אז', 'h':'אח', 'i':'אט', 'j':'אי',
+    const en = {
+        'a':'אא', 'b':'אב', 'c':'אג', 'd':'אד', 'e':'אה', 'f':'או', 'g':'אז', 'h':'אט', 'i':'אי', 'j':'אי',
         'k':'אכ', 'l':'אל', 'm':'אמ', 'n':'אנ', 'o':'אס', 'p':'אע', 'q':'אפ', 'r':'אצ', 's':'אק', 't':'אר',
         'u':'אש', 'v':'את', 'w':'אך', 'x':'אם', 'y':'אן', 'z':'אף',
         'A':'אץ', 'B':'בא', 'C':'בב', 'D':'בג', 'E':'בד', 'F':'בה', 'G':'בו', 'H':'בז', 'I':'בח', 'J':'בט',
@@ -56,34 +154,39 @@
         '_':'דל', '~':'דמ', '`':'דנ'
     };
 
-    function processEncryption() {
+    function processEn() {
         const input = document.getElementById('inputText').value;
         let finalOutput = "";
 
         for (let char of input) {
             if (char === '\n' || char === '\r') {
-                // אם זה אנטר - פשוט תוסיף אותו לפלט כמו שהוא
                 finalOutput += char;
             } else {
-                // אחרת - תעביר דרך שני שלבי ההצפנה
                 let latinChar = hebrewToLatinMap[char] || char;
-                finalOutput += encryptionMap[latinChar] || "";
+                finalOutput += en[latinChar] || "";
             }
         }
         document.getElementById('outputText').value = finalOutput;
+        
+        // אפקט קטן להצלחה
+        const out = document.getElementById('outputText');
+        out.style.borderColor = 'var(--success)';
+        setTimeout(() => out.style.borderColor = '#e1e8ed', 1000);
     }
 
     function copyToClipboard() {
         const output = document.getElementById('outputText');
         output.select();
         document.execCommand('copy');
+        alert('הטקסט הועתק ללוח!');
     }
 
     function downloadTxt() {
         const text = document.getElementById('outputText').value;
+        if(!text) return alert('אין טקסט להורדה');
         const element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
-        element.setAttribute('download', "encrypted.txt");
+        element.setAttribute('download', "translation.txt");
         element.click();
     }
 </script>
