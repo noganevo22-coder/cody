@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>מערכת הצפנה - שמירה על שורות</title>
+    <style>
+        :root { --primary: #4a90e2; --secondary: #f5f7fa; --text: #333; }
+        body { font-family: 'Segoe UI', sans-serif; background-color: var(--secondary); display: flex; justify-content: center; padding: 20px; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 800px; width: 100%; }
+        h1 { text-align: center; color: var(--primary); }
+        textarea { width: 100%; height: 150px; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; box-sizing: border-box; margin-bottom: 20px; }
+        .actions { display: flex; gap: 10px; margin-bottom: 20px; }
+        button { padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-encrypt { background-color: var(--primary); }
+        .btn-copy { background-color: #2ecc71; }
+        .btn-download { background-color: #f39c12; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>הצפנה שומרת מבנה</h1>
+    
+    <label>טקסט מקור:</label>
+    <textarea id="inputText" placeholder="הקלד כאן..."></textarea>
+
+    <div class="actions">
+        <button class="btn-encrypt" onclick="processEncryption()">הצפן</button>
+        <button class="btn-copy" onclick="copyToClipboard()">העתק</button>
+        <button class="btn-download" onclick="downloadTxt()">הורד TXT</button>
+    </div>
+
+    <label>פלט מוצפן (עם ירידות שורה מקוריות):</label>
+    <textarea id="outputText" readonly></textarea>
+</div>
+
+<script>
+    const hebrewToLatinMap = {
+        'א':'A','ב':'B','ג':'C','ד':'D','ה':'E','ו':'F','ז':'G','ח':'H','ט':'I','י':'J','כ':'K','ך':'L',
+        'ל':'M','מ':'N','ם':'O','נ':'P','ן':'Q','ס':'R','ע':'S','פ':'T','ף':'U','צ':'V','ץ':'W','ק':'X',
+        'ר':'Y','ש':'Z','ת':'_'
+    };
+
+    const encryptionMap = {
+        'a':'אא', 'b':'אב', 'c':'אג', 'd':'אד', 'e':'אה', 'f':'או', 'g':'אז', 'h':'אח', 'i':'אט', 'j':'אי',
+        'k':'אכ', 'l':'אל', 'm':'אמ', 'n':'אנ', 'o':'אס', 'p':'אע', 'q':'אפ', 'r':'אצ', 's':'אק', 't':'אר',
+        'u':'אש', 'v':'את', 'w':'אך', 'x':'אם', 'y':'אן', 'z':'אף',
+        'A':'אץ', 'B':'בא', 'C':'בב', 'D':'בג', 'E':'בד', 'F':'בה', 'G':'בו', 'H':'בז', 'I':'בח', 'J':'בט',
+        'K':'בי', 'L':'בכ', 'M':'בל', 'N':'במ', 'O':'בנ', 'P':'בס', 'Q':'בע', 'R':'בפ', 'S':'בצ', 'T':'בק',
+        'U':'בר', 'V':'בש', 'W':'בת', 'X':'בך', 'Y':'בם', 'Z':'בן',
+        '0':'בף', '1':'בץ', '2':'גא', '3':'גב', '4':'גג', '5':'גד', '6':'גה', '7':'גו', '8':'גז', '9':'גח',
+        ' ':'גט', '(':'גי', ')':'גכ', '*':'גל', '&':'גמ', '^':'גנ', '%':'גס', '$':'גע', '#':'גפ', '@':'גצ',
+        '!':'גק', '>':'גר', '<':'גש', '.':'גת', '"':'גך', "'":'גם', '[':'גן', ']':'גף', '{':'גץ', '}':'דא',
+        ',':'דב', ';':'דג', ':':'דד', '/':'דה', '\\':'דו', '|':'דז', '?':'דח', '+':'דט', '=':'די', '-':'דכ',
+        '_':'דל', '~':'דמ', '`':'דנ'
+    };
+
+    function processEncryption() {
+        const input = document.getElementById('inputText').value;
+        let finalOutput = "";
+
+        for (let char of input) {
+            if (char === '\n' || char === '\r') {
+                // אם זה אנטר - פשוט תוסיף אותו לפלט כמו שהוא
+                finalOutput += char;
+            } else {
+                // אחרת - תעביר דרך שני שלבי ההצפנה
+                let latinChar = hebrewToLatinMap[char] || char;
+                finalOutput += encryptionMap[latinChar] || "";
+            }
+        }
+        document.getElementById('outputText').value = finalOutput;
+    }
+
+    function copyToClipboard() {
+        const output = document.getElementById('outputText');
+        output.select();
+        document.execCommand('copy');
+    }
+
+    function downloadTxt() {
+        const text = document.getElementById('outputText').value;
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', "encrypted.txt");
+        element.click();
+    }
+</script>
+</body>
+</html>
