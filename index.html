@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מתרגם מבנה מודרני</title>
+    <title>מתרגם מבנה מודרני - לייב</title>
     <style>
         :root {
             --primary: #4a90e2;
@@ -101,30 +101,42 @@
         }
 
         .btn-en { background-color: var(--primary); }
-        .btn-en:hover { background-color: var(--primary-hover); box-shadow: 0 6px 12px rgba(74, 144, 226, 0.2); }
-
         .btn-copy { background-color: var(--success); }
-        .btn-copy:hover { background-color: var(--success-hover); box-shadow: 0 6px 12px rgba(46, 204, 113, 0.2); }
-
         .btn-download { background-color: var(--warning); }
-        .btn-download:hover { background-color: var(--warning-hover); box-shadow: 0 6px 12px rgba(243, 156, 18, 0.2); }
 
         #outputText {
             background-color: #fafbfc;
             border-style: dashed;
+        }
+
+        .live-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: #ff4757;
+            color: white;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            vertical-align: middle;
+            margin-right: 5px;
+            animation: blink 1.5s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>תרגום שומר מבנה</h1>
+    <h1>תרגום שומר מבנה <span class="live-badge">LIVE</span></h1>
     
-    <label for="inputText">טקסט מקור</label>
-    <textarea id="inputText" placeholder="הדבק או הקלד טקסט כאן..."></textarea>
+    <label for="inputText">טקסט מקור (הקלד כאן לתרגום מיידי)</label>
+    <textarea id="inputText" oninput="processEn()" placeholder="הדבק או הקלד טקסט כאן..."></textarea>
 
     <div class="actions">
-        <button class="btn-en" onclick="processEn()">⚡ תרגם עכשיו</button>
         <button class="btn-copy" onclick="copyToClipboard()">📋 העתק פלט</button>
         <button class="btn-download" onclick="downloadTxt()">💾 הורד קובץ</button>
     </div>
@@ -141,7 +153,7 @@
     };
 
     const en = {
-        'a':'אא', 'b':'אב', 'c':'אג', 'd':'אד', 'e':'אה', 'f':'או', 'g':'אז', 'h':'אט', 'i':'אי', 'j':'אי',
+        'a':'אא', 'b':'אב', 'c':'אג', 'd':'אד', 'e':'אה', 'f':'או', 'g':'אז', 'h':'אח', 'i':'אט', 'j':'אי',
         'k':'אכ', 'l':'אל', 'm':'אמ', 'n':'אנ', 'o':'אס', 'p':'אע', 'q':'אפ', 'r':'אצ', 's':'אק', 't':'אר',
         'u':'אש', 'v':'את', 'w':'אך', 'x':'אם', 'y':'אן', 'z':'אף',
         'A':'אץ', 'B':'בא', 'C':'בב', 'D':'בג', 'E':'בד', 'F':'בה', 'G':'בו', 'H':'בז', 'I':'בח', 'J':'בט',
@@ -163,22 +175,24 @@
                 finalOutput += char;
             } else {
                 let latinChar = hebrewToLatinMap[char] || char;
+                // תיקון לוגי: אם התו בלטינית קיים במיפוי 'en', נשתמש בו
                 finalOutput += en[latinChar] || "";
             }
         }
         document.getElementById('outputText').value = finalOutput;
-        
-        // אפקט קטן להצלחה
-        const out = document.getElementById('outputText');
-        out.style.borderColor = 'var(--success)';
-        setTimeout(() => out.style.borderColor = '#e1e8ed', 1000);
     }
 
     function copyToClipboard() {
         const output = document.getElementById('outputText');
+        if(!output.value) return;
         output.select();
         document.execCommand('copy');
-        alert('הטקסט הועתק ללוח!');
+        
+        // משוב ויזואלי קטן על הכפתור
+        const btn = document.querySelector('.btn-copy');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '✅ הועתק!';
+        setTimeout(() => btn.innerHTML = originalText, 2000);
     }
 
     function downloadTxt() {
