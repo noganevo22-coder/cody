@@ -3,11 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מתרגם מבנה - שמירת טקסט</title>
+    <title>מתרגם מבנה - תיקון פענוח מלא</title>
     <style>
         :root {
             --primary: #4a90e2;
-            --primary-hover: #357abd;
             --success: #2ecc71;
             --warning: #f39c12;
             --secondary: #95a5a6;
@@ -35,15 +34,9 @@
             box-shadow: var(--shadow);
             max-width: 900px;
             width: 100%;
-            position: relative;
         }
 
-        h1 {
-            text-align: center;
-            margin-top: 0;
-            font-weight: 800;
-            color: var(--primary);
-        }
+        h1 { text-align: center; color: var(--primary); }
 
         .mode-indicator {
             text-align: center;
@@ -52,15 +45,6 @@
             background: #eef2f7;
             border-radius: 10px;
             font-weight: bold;
-            transition: all 0.3s ease;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: #666;
         }
 
         textarea {
@@ -72,14 +56,7 @@
             font-size: 16px;
             box-sizing: border-box;
             margin-bottom: 25px;
-            transition: all 0.3s ease;
-            resize: vertical;
             outline: none;
-        }
-
-        textarea:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
         }
 
         .actions {
@@ -95,15 +72,8 @@
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
             color: white;
-            transition: transform 0.1s;
         }
-
-        button:active { transform: scale(0.95); }
 
         .btn-reverse { background-color: var(--secondary); }
         .btn-copy { background-color: var(--success); }
@@ -118,19 +88,12 @@
             border-radius: 50px;
             padding: 12px;
             position: fixed;
-            z-index: 1;
             left: 50%;
             bottom: 30px;
             transform: translateX(-50%);
-            font-size: 14px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        #toast.show {
-            visibility: visible;
-            animation: fadein 0.5s, fadeout 0.5s 1.5s;
-        }
-
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 1.5s; }
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
     </style>
@@ -138,12 +101,11 @@
 <body>
 
 <div class="container">
-    <h1>תרגום שומר מבנה <span style="font-size: 0.5em; color: #ff4757;">LIVE</span></h1>
-    
+    <h1>מתרגם מבנה <span style="font-size: 0.5em;">FIXED</span></h1>
     <div id="modeDisplay" class="mode-indicator" style="color: #e67e22;">מצב נוכחי: הפוך (קוד ← טקסט)</div>
 
-    <label for="inputText">טקסט מקור</label>
-    <textarea id="inputText" oninput="processText()" placeholder="הקלד או הדבק כאן..."></textarea>
+    <label>טקסט מקור:</label>
+    <textarea id="inputText" oninput="processText()" placeholder="הקלד כאן..."></textarea>
 
     <div class="actions">
         <button class="btn-reverse" onclick="toggleMode()">🔄 החלף כיוון</button>
@@ -151,28 +113,33 @@
         <button class="btn-download" onclick="downloadTxt()">💾 הורד קובץ</button>
     </div>
 
-    <label for="outputText">תוצאה (מועתק אוטומטית)</label>
+    <label>תוצאה:</label>
     <textarea id="outputText" readonly></textarea>
 </div>
 
 <div id="toast">✅ הועתק ללוח!</div>
 
 <script>
-    let isReverseMode = true;
+    let isReverseMode = false;
     let toastTimeout;
 
+    // מילון מאוחד ללא התנגשויות
     const en = {
+        // אנגלית קטנה (אא-אף)
         'a':'אא', 'b':'אב', 'c':'אג', 'd':'אד', 'e':'אה', 'f':'או', 'g':'אז', 'h':'אח', 'i':'אט', 'j':'אי',
         'k':'אכ', 'l':'אל', 'm':'אמ', 'n':'אנ', 'o':'אס', 'p':'אע', 'q':'אפ', 'r':'אצ', 's':'אק', 't':'אר',
         'u':'אש', 'v':'את', 'w':'אך', 'x':'אם', 'y':'אן', 'z':'אף',
+        // אנגלית גדולה (אץ-בן)
         'A':'אץ', 'B':'בא', 'C':'בב', 'D':'בג', 'E':'בד', 'F':'בה', 'G':'בו', 'H':'בז', 'I':'בח', 'J':'בט',
         'K':'בי', 'L':'בכ', 'M':'בל', 'N':'במ', 'O':'בנ', 'P':'בס', 'Q':'בע', 'R':'בפ', 'S':'בצ', 'T':'בק',
         'U':'בר', 'V':'בש', 'W':'בת', 'X':'בך', 'Y':'בם', 'Z':'בן',
+        // מספרים וסימנים (בף-דנ)
         '0':'בף', '1':'בץ', '2':'גא', '3':'גב', '4':'גג', '5':'גד', '6':'גה', '7':'גו', '8':'גז', '9':'גח',
         ' ':'גט', '(':'גי', ')':'גכ', '*':'גל', '&':'גמ', '^':'גנ', '%':'גס', '$':'גע', '#':'גפ', '@':'גצ',
         '!':'גק', '>':'גר', '<':'גש', '.':'גת', '"':'גך', "'":'גם', '[':'גן', ']':'גף', '{':'גץ', '}':'דא',
         ',':'דב', ';':'דג', ':':'דד', '/':'דה', '\\':'דו', '|':'דז', '?':'דח', '+':'דט', '=':'די', '-':'דכ',
         '_':'דל', '~':'דמ', '`':'דנ',
+        // עברית - השתמשנו בקידומת ד' וה' כדי שלא יתנגש עם א' ו-ב' של האנגלית
         'א':'דס', 'ב':'דע', 'ג':'דפ', 'ד':'דצ', 'ה':'דק', 'ו':'דר', 'ז':'דש', 'ח':'דת', 'ט':'דך', 'י':'דם',
         'כ':'דן', 'ל':'דף', 'מ':'דץ', 'נ':'הא', 'ס':'הב', 'ע':'הג', 'פ':'הד', 'צ':'הה', 'ק':'הו', 'ר':'הז',
         'ש':'הח', 'ת':'הט', 'ך':'הי', 'ם':'הכ', 'ן':'הל', 'ף':'המ', 'ץ':'הנ'
@@ -184,22 +151,15 @@
     function toggleMode() {
         isReverseMode = !isReverseMode;
         const display = document.getElementById('modeDisplay');
-        
         display.innerText = isReverseMode ? "מצב נוכחי: הפוך (קוד ← טקסט)" : "מצב נוכחי: רגיל (טקסט ← קוד)";
         display.style.color = isReverseMode ? "#e67e22" : "var(--primary)";
-        
-        // במקום לנקות, אנחנו פשוט מעבדים מחדש את הטקסט הקיים
         processText();
     }
 
     function processText() {
         const input = document.getElementById('inputText').value;
         let finalOutput = "";
-
-        if (!input) {
-            document.getElementById('outputText').value = "";
-            return;
-        }
+        if (!input) { document.getElementById('outputText').value = ""; return; }
 
         if (!isReverseMode) {
             for (let char of input) {
@@ -217,24 +177,19 @@
                 }
             }
         }
-        
         document.getElementById('outputText').value = finalOutput;
-        
-        if (finalOutput) {
-            autoCopyToClipboard(finalOutput);
-        }
+        //if (finalOutput) autoCopyToClipboard(finalOutput);
     }
 
     function autoCopyToClipboard(text) {
-        navigator.clipboard.writeText(text).catch(err => console.error('Error copying text: ', err));
-        showToast();
+        navigator.clipboard.writeText(text).then(() => showToast()).catch(() => {});
     }
 
     function showToast() {
         const toast = document.getElementById("toast");
         toast.className = "show";
         clearTimeout(toastTimeout);
-        toastTimeout = setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
+        toastTimeout = setTimeout(() => { toast.className = ""; }, 2000);
     }
 
     function copyToClipboard(manual = false) {
@@ -246,7 +201,7 @@
 
     function downloadTxt() {
         const text = document.getElementById('outputText').value;
-        if(!text) return alert('אין טקסט להורדה');
+        if(!text) return;
         const element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
         element.setAttribute('download', "translation.txt");
