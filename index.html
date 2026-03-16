@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מתרגם מבנה מודרני - לייב</title>
+    <title>מתרגם מבנה - שמירת טקסט</title>
     <style>
         :root {
             --primary: #4a90e2;
             --primary-hover: #357abd;
             --success: #2ecc71;
-            --success-hover: #27ae60;
             --warning: #f39c12;
-            --warning-hover: #d68910;
+            --secondary: #95a5a6;
             --bg: #f0f2f5;
             --text-main: #2c3e50;
             --shadow: 0 10px 25px rgba(0,0,0,0.08);
@@ -36,6 +35,7 @@
             box-shadow: var(--shadow);
             max-width: 900px;
             width: 100%;
+            position: relative;
         }
 
         h1 {
@@ -43,7 +43,16 @@
             margin-top: 0;
             font-weight: 800;
             color: var(--primary);
-            letter-spacing: -1px;
+        }
+
+        .mode-indicator {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #eef2f7;
+            border-radius: 10px;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
 
         label {
@@ -86,112 +95,153 @@
             border-radius: 10px;
             cursor: pointer;
             font-weight: 700;
-            font-size: 1rem;
-            color: white;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            color: white;
+            transition: transform 0.1s;
         }
 
-        button:active {
-            transform: scale(0.96);
-        }
+        button:active { transform: scale(0.95); }
 
-        .btn-en { background-color: var(--primary); }
+        .btn-reverse { background-color: var(--secondary); }
         .btn-copy { background-color: var(--success); }
         .btn-download { background-color: var(--warning); }
 
-        #outputText {
-            background-color: #fafbfc;
-            border-style: dashed;
+        #toast {
+            visibility: hidden;
+            min-width: 200px;
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            border-radius: 50px;
+            padding: 12px;
+            position: fixed;
+            z-index: 1;
+            left: 50%;
+            bottom: 30px;
+            transform: translateX(-50%);
+            font-size: 14px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
 
-        .live-badge {
-            display: inline-block;
-            padding: 2px 8px;
-            background: #ff4757;
-            color: white;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            vertical-align: middle;
-            margin-right: 5px;
-            animation: blink 1.5s infinite;
+        #toast.show {
+            visibility: visible;
+            animation: fadein 0.5s, fadeout 0.5s 1.5s;
         }
 
-        @keyframes blink {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>תרגום שומר מבנה <span class="live-badge">LIVE</span></h1>
+    <h1>תרגום שומר מבנה <span style="font-size: 0.5em; color: #ff4757;">LIVE</span></h1>
     
-    <label for="inputText">טקסט מקור (הקלד כאן לתרגום מיידי)</label>
-    <textarea id="inputText" oninput="processEn()" placeholder="הדבק או הקלד טקסט כאן..."></textarea>
+    <div id="modeDisplay" class="mode-indicator" style="color: #e67e22;">מצב נוכחי: הפוך (קוד ← טקסט)</div>
+
+    <label for="inputText">טקסט מקור</label>
+    <textarea id="inputText" oninput="processText()" placeholder="הקלד או הדבק כאן..."></textarea>
 
     <div class="actions">
-        <button class="btn-copy" onclick="copyToClipboard()">📋 העתק פלט</button>
+        <button class="btn-reverse" onclick="toggleMode()">🔄 החלף כיוון</button>
+        <button class="btn-copy" onclick="copyToClipboard(true)">📋 העתק ידני</button>
         <button class="btn-download" onclick="downloadTxt()">💾 הורד קובץ</button>
     </div>
 
-    <label for="outputText">תוצאת התרגום</label>
-    <textarea id="outputText" readonly placeholder="התוצאה תופיע כאן..."></textarea>
+    <label for="outputText">תוצאה (מועתק אוטומטית)</label>
+    <textarea id="outputText" readonly></textarea>
 </div>
 
+<div id="toast">✅ הועתק ללוח!</div>
+
 <script>
+    let isReverseMode = true;
+    let toastTimeout;
+
     const en = {
-        // אותיות קטנות
         'a':'אא', 'b':'אב', 'c':'אג', 'd':'אד', 'e':'אה', 'f':'או', 'g':'אז', 'h':'אח', 'i':'אט', 'j':'אי',
         'k':'אכ', 'l':'אל', 'm':'אמ', 'n':'אנ', 'o':'אס', 'p':'אע', 'q':'אפ', 'r':'אצ', 's':'אק', 't':'אר',
         'u':'אש', 'v':'את', 'w':'אך', 'x':'אם', 'y':'אן', 'z':'אף',
-        // אותיות גדולות
         'A':'אץ', 'B':'בא', 'C':'בב', 'D':'בג', 'E':'בד', 'F':'בה', 'G':'בו', 'H':'בז', 'I':'בח', 'J':'בט',
         'K':'בי', 'L':'בכ', 'M':'בל', 'N':'במ', 'O':'בנ', 'P':'בס', 'Q':'בע', 'R':'בפ', 'S':'בצ', 'T':'בק',
         'U':'בר', 'V':'בש', 'W':'בת', 'X':'בך', 'Y':'בם', 'Z':'בן',
-        // מספרים וסימנים
         '0':'בף', '1':'בץ', '2':'גא', '3':'גב', '4':'גג', '5':'גד', '6':'גה', '7':'גו', '8':'גז', '9':'גח',
         ' ':'גט', '(':'גי', ')':'גכ', '*':'גל', '&':'גמ', '^':'גנ', '%':'גס', '$':'גע', '#':'גפ', '@':'גצ',
         '!':'גק', '>':'גר', '<':'גש', '.':'גת', '"':'גך', "'":'גם', '[':'גן', ']':'גף', '{':'גץ', '}':'דא',
         ',':'דב', ';':'דג', ':':'דד', '/':'דה', '\\':'דו', '|':'דז', '?':'דח', '+':'דט', '=':'די', '-':'דכ',
         '_':'דל', '~':'דמ', '`':'דנ',
-        // אותיות בעברית (27 תווים)
         'א':'דס', 'ב':'דע', 'ג':'דפ', 'ד':'דצ', 'ה':'דק', 'ו':'דר', 'ז':'דש', 'ח':'דת', 'ט':'דך', 'י':'דם',
         'כ':'דן', 'ל':'דף', 'מ':'דץ', 'נ':'הא', 'ס':'הב', 'ע':'הג', 'פ':'הד', 'צ':'הה', 'ק':'הו', 'ר':'הז',
         'ש':'הח', 'ת':'הט', 'ך':'הי', 'ם':'הכ', 'ן':'הל', 'ף':'המ', 'ץ':'הנ'
     };
 
-    function processEn() {
+    const reverseMap = {};
+    for (let key in en) { reverseMap[en[key]] = key; }
+
+    function toggleMode() {
+        isReverseMode = !isReverseMode;
+        const display = document.getElementById('modeDisplay');
+        
+        display.innerText = isReverseMode ? "מצב נוכחי: הפוך (קוד ← טקסט)" : "מצב נוכחי: רגיל (טקסט ← קוד)";
+        display.style.color = isReverseMode ? "#e67e22" : "var(--primary)";
+        
+        // במקום לנקות, אנחנו פשוט מעבדים מחדש את הטקסט הקיים
+        processText();
+    }
+
+    function processText() {
         const input = document.getElementById('inputText').value;
         let finalOutput = "";
 
-        for (let char of input) {
-            if (char === '\n' || char === '\r') {
-                finalOutput += char;
-            } else {
-                // שימוש ישיר במיפוי ללא המרה מוקדמת
-                finalOutput += en[char] || "";
+        if (!input) {
+            document.getElementById('outputText').value = "";
+            return;
+        }
+
+        if (!isReverseMode) {
+            for (let char of input) {
+                finalOutput += (char === '\n' || char === '\r') ? char : (en[char] || "");
+            }
+        } else {
+            let i = 0;
+            while (i < input.length) {
+                if (input[i] === '\n' || input[i] === '\r') {
+                    finalOutput += input[i]; i++;
+                } else {
+                    let pair = input.substr(i, 2);
+                    if (reverseMap[pair]) { finalOutput += reverseMap[pair]; i += 2; }
+                    else { i++; }
+                }
             }
         }
+        
         document.getElementById('outputText').value = finalOutput;
+        
+        if (finalOutput) {
+            autoCopyToClipboard(finalOutput);
+        }
     }
 
-    function copyToClipboard() {
+    function autoCopyToClipboard(text) {
+        navigator.clipboard.writeText(text).catch(err => console.error('Error copying text: ', err));
+        showToast();
+    }
+
+    function showToast() {
+        const toast = document.getElementById("toast");
+        toast.className = "show";
+        clearTimeout(toastTimeout);
+        toastTimeout = setTimeout(() => { toast.className = toast.className.replace("show", ""); }, 2000);
+    }
+
+    function copyToClipboard(manual = false) {
         const output = document.getElementById('outputText');
         if(!output.value) return;
-        output.select();
-        document.execCommand('copy');
-        
-        const btn = document.querySelector('.btn-copy');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '✅ הועתק!';
-        setTimeout(() => btn.innerHTML = originalText, 2000);
+        navigator.clipboard.writeText(output.value);
+        if(manual) showToast();
     }
 
     function downloadTxt() {
