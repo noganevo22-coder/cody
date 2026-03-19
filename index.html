@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>מתרגם מבנה - העתקה אוטומטית עם מתג</title>
+    <title>מתרגם מבנה - הגדרות אישיות</title>
     <style>
         :root {
             --primary: #4a90e2;
@@ -13,7 +13,7 @@
             --bg: #f0f2f5;
             --text-main: #2c3e50;
             --shadow: 0 10px 25px rgba(0,0,0,0.08);
-            --drag-bg: rgba(74, 144, 226, 0.15);
+            --drag-bg: rgba(74, 144, 226, 0.2);
         }
 
         body {
@@ -26,7 +26,7 @@
             min-height: 100vh;
             margin: 0;
             padding: 20px;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s;
         }
 
         body.drag-active { background-color: var(--drag-bg); }
@@ -38,12 +38,6 @@
             box-shadow: var(--shadow);
             max-width: 900px;
             width: 100%;
-            transition: transform 0.3s ease;
-        }
-
-        body.drag-active .container {
-            transform: scale(1.02);
-            border: 2px dashed var(--primary);
         }
 
         h1 { text-align: center; color: var(--primary); margin-bottom: 20px; }
@@ -51,29 +45,41 @@
         .mode-indicator {
             text-align: center;
             margin-bottom: 20px;
-            padding: 10px;
+            padding: 12px;
             background: #eef2f7;
             border-radius: 10px;
             font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            border: 2px solid transparent;
+        }
+        .mode-indicator:hover {
+            background: #e1e8ed;
+            border-color: var(--primary);
         }
 
         .settings-bar {
             display: flex;
             justify-content: center;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
+            gap: 30px;
+            margin-bottom: 25px;
             background: #f9f9f9;
-            padding: 10px;
+            padding: 15px;
             border-radius: 10px;
         }
 
-        /* עיצוב מתג (Toggle Switch) */
+        .setting-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .switch {
             position: relative;
             display: inline-block;
-            width: 50px;
-            height: 24px;
+            width: 44px;
+            height: 22px;
         }
 
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -90,19 +96,20 @@
         .slider:before {
             position: absolute;
             content: "";
-            height: 18px; width: 18px;
-            left: 4px; bottom: 3px;
+            height: 16px; width: 16px;
+            right: 4px;
+            bottom: 3px;
             background-color: white;
             transition: .4s;
             border-radius: 50%;
         }
 
         input:checked + .slider { background-color: var(--success); }
-        input:checked + .slider:before { transform: translateX(24px); }
+        input:checked + .slider:before { transform: translateX(-20px); }
 
         textarea {
             width: 100%;
-            height: 150px;
+            height: 180px;
             padding: 15px;
             border: 2px solid #e1e8ed;
             border-radius: 12px;
@@ -111,17 +118,18 @@
             margin-bottom: 20px;
             outline: none;
             resize: vertical;
+            font-family: monospace;
         }
 
         .actions {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            display: flex;
             gap: 15px;
             margin-bottom: 25px;
         }
 
         button {
-            padding: 12px 24px;
+            flex: 1;
+            padding: 12px;
             border: none;
             border-radius: 10px;
             cursor: pointer;
@@ -130,15 +138,13 @@
             transition: transform 0.1s;
         }
 
-        button:active { transform: scale(0.95); }
-
-        .btn-reverse { background-color: var(--secondary); }
         .btn-copy { background-color: var(--success); }
         .btn-download { background-color: var(--warning); }
+        button:active { transform: scale(0.98); }
 
         #toast {
             visibility: hidden;
-            min-width: 200px;
+            min-width: 220px;
             background-color: #333;
             color: #fff;
             text-align: center;
@@ -150,7 +156,6 @@
             transform: translateX(-50%);
             z-index: 100;
         }
-
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 1.5s; }
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
         @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
@@ -161,21 +166,31 @@
 <div class="container">
     <h1>מתרגם מבנה</h1>
 
-    <div id="modeDisplay" class="mode-indicator" style="color: var(--primary);">מצב נוכחי: קידוד (טקסט ← קוד)</div>
-
-    <div class="settings-bar">
-        <span>העתקה אוטומטית:</span>
-        <label class="switch">
-            <input type="checkbox" id="autoCopyToggle" unchecked>
-            <span class="slider"></span>
-        </label>
+    <div id="modeDisplay" class="mode-indicator" onclick="toggleMode()" title="לחץ להחלפת כיוון">
+        טוען מצב...
     </div>
 
-    <label>טקסט מקור (ניתן לגרור קובץ לכל מקום):</label>
-    <textarea id="inputText" oninput="processText()" placeholder="הקלד כאן או גרור קובץ..."></textarea>
+    <div class="settings-bar">
+        <div class="setting-item">
+            <span>העתקה אוטומטית:</span>
+            <label class="switch">
+                <input type="checkbox" id="autoCopyToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div class="setting-item">
+            <span>הורדה אוטומטית:</span>
+            <label class="switch">
+                <input type="checkbox" id="autoDownloadToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+
+    <label>קלט (גרור כל קובץ לכאן):</label>
+    <textarea id="inputText" oninput="processText(false)" placeholder="הדבק טקסט או גרור קובץ מכל סוג..."></textarea>
 
     <div class="actions">
-        <button class="btn-reverse" onclick="toggleMode()">🔄 החלף כיוון</button>
         <button class="btn-copy" onclick="copyToClipboard(true)">📋 העתק ידני</button>
         <button class="btn-download" onclick="downloadTxt()">💾 הורד קובץ</button>
     </div>
@@ -184,10 +199,19 @@
     <textarea id="outputText" readonly placeholder="התוצאה תופיע כאן..."></textarea>
 </div>
 
-<div id="toast">✅ הועתק ללוח!</div>
+<div id="toast">✅ הועתק!</div>
 
 <script>
-    let isReverseMode = false;
+    /* ==========================================
+       מרכז שליטה - שנה את הערכים כאן למטה
+       ========================================== */
+    const CONFIG = {
+        defaultToReverse: false,   // true = פענוח (קוד ← טקסט), false = קידוד (טקסט ← קוד)
+        autoCopyEnabled: false,    // האם העתקה אוטומטית תהיה פעילה כברירת מחדל
+        autoDownloadEnabled: true  // האם הורדה אוטומטית (בהדבקה) תהיה פעילה כברירת מחדל
+    };
+
+    let isReverseMode = CONFIG.defaultToReverse;
     let toastTimeout;
 
     const enMap = {
@@ -214,43 +238,57 @@
     const inputArea = document.getElementById('inputText');
     const outputArea = document.getElementById('outputText');
     const autoCopyToggle = document.getElementById('autoCopyToggle');
+    const autoDownloadToggle = document.getElementById('autoDownloadToggle');
+    const modeDisplay = document.getElementById('modeDisplay');
 
-    // גרירת קבצים
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        window.addEventListener(eventName, (e) => e.preventDefault(), false);
-    });
+    // אתחול הגדרות לפי ה-CONFIG
+    function init() {
+        autoCopyToggle.checked = CONFIG.autoCopyEnabled;
+        autoDownloadToggle.checked = CONFIG.autoDownloadEnabled;
+        updateModeUI();
+    }
 
-    window.addEventListener('dragenter', () => body.classList.add('drag-active'));
-    window.addEventListener('dragleave', (e) => {
-        if (e.relatedTarget === null) body.classList.remove('drag-active');
-    });
+    // ניהול ויזואלי של גרירה
+    window.addEventListener('dragenter', (e) => { e.preventDefault(); body.classList.add('drag-active'); });
+    window.addEventListener('dragover', (e) => e.preventDefault());
+    window.addEventListener('dragleave', (e) => { if (e.relatedTarget === null) body.classList.remove('drag-active'); });
 
     window.addEventListener('drop', (e) => {
+        e.preventDefault();
         body.classList.remove('drag-active');
         const file = e.dataTransfer.files[0];
-        if (file && (file.type === "text/plain" || file.name.endsWith('.txt'))) {
+        if (file) {
             const reader = new FileReader();
             reader.onload = (event) => {
                 inputArea.value = event.target.result;
-                processText();
+                processText(true);
             };
             reader.readAsText(file);
         }
     });
 
+    inputArea.addEventListener('paste', () => {
+        setTimeout(() => processText(true), 10);
+    });
+
     function toggleMode() {
         isReverseMode = !isReverseMode;
-        const display = document.getElementById('modeDisplay');
-        display.innerText = isReverseMode ? "מצב נוכחי: פענוח (קוד ← טקסט)" : "מצב נוכחי: קידוד (טקסט ← קוד)";
-        display.style.color = isReverseMode ? "#e67e22" : "var(--primary)";
-        processText();
+        updateModeUI();
+        processText(false);
     }
 
-    function processText() {
+    function updateModeUI() {
+        modeDisplay.innerText = isReverseMode ? 
+            "מצב נוכחי: פענוח (קוד ← טקסט) 🔄" : 
+            "מצב נוכחי: קידוד (טקסט ← קוד) 🔄";
+        modeDisplay.style.color = isReverseMode ? "#e67e22" : "var(--primary)";
+    }
+
+    function processText(triggerDownload = false) {
         const input = inputArea.value;
-        let finalOutput = "";
         if (!input) { outputArea.value = ""; return; }
 
+        let finalOutput = "";
         if (!isReverseMode) {
             for (let char of input) {
                 finalOutput += (char === '\n' || char === '\r') ? char : (enMap[char] || "");
@@ -269,20 +307,18 @@
         }
         outputArea.value = finalOutput;
 
-        // העתקה אוטומטית אם המתג דלוק
         if (finalOutput && autoCopyToggle.checked) {
-            autoCopyToClipboard(finalOutput);
+            navigator.clipboard.writeText(finalOutput).then(() => showToast("📋 הועתק אוטומטית"));
+        }
+
+        if (finalOutput && triggerDownload && autoDownloadToggle.checked) {
+            downloadTxt(true);
         }
     }
 
-    function autoCopyToClipboard(text) {
-        navigator.clipboard.writeText(text).then(() => {
-            showToast();
-        }).catch(() => {});
-    }
-
-    function showToast() {
+    function showToast(msg) {
         const toast = document.getElementById("toast");
+        toast.innerText = msg;
         toast.className = "show";
         clearTimeout(toastTimeout);
         toastTimeout = setTimeout(() => { toast.className = ""; }, 2000);
@@ -291,17 +327,22 @@
     function copyToClipboard(manual = false) {
         if(!outputArea.value) return;
         navigator.clipboard.writeText(outputArea.value).then(() => {
-            if(manual) showToast();
+            if(manual) showToast("✅ הועתק ללוח!");
         });
     }
 
-    function downloadTxt() {
+    function downloadTxt(isAuto = false) {
         if(!outputArea.value) return;
         const element = document.createElement('a');
         element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(outputArea.value));
-        element.setAttribute('download', "result.txt");
+        element.setAttribute('download', isAuto ? "translated_file.txt" : "result.txt");
         element.click();
+        if(isAuto) showToast("💾 הורדה אוטומטית בוצעה");
     }
+
+    // הפעלה ראשונית
+    init();
 </script>
+
 </body>
 </html>
